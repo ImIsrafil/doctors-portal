@@ -55,7 +55,7 @@ const Navbar = () => {
         <a className="btn btn-ghost normal-case text-xl">Doctors Portal</a>
       </div>
       <div className="navbar-center hidden lg:flex flex-1 justify-end">
-        <ul className="menu menu-horizontal p-0 text-accent">
+        <ul className="menu menu-horizontal p-0 text-secondary">
           {
             menuItems
           }

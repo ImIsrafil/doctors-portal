@@ -10,7 +10,7 @@ const Banner = () => {
       backgroundPosition: 'center',
       backgroundSize: 'cover',
       backgroundRepeat: 'no-repeat'
-    }} className="hero py-10 lg:py-40">
+    }} className="hero py-10 lg:py-20">
       <div className="hero-content flex-col lg:flex-row-reverse gap-10">
         <img
           src={chairImg}
