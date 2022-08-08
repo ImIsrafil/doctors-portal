@@ -1,49 +1,76 @@
-import React, { useEffect } from "react";
+import React from 'react'
 import auth from "../../Firebase/firebase.init";
-import { useSignInWithEmailAndPassword, useSignInWithGoogle } from "react-firebase-hooks/auth";
+import { useCreateUserWithEmailAndPassword, useSignInWithGoogle, useUpdateProfile } from "react-firebase-hooks/auth";
 import { useForm } from "react-hook-form";
 import Loading from "../Shared/Loading";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const Login = () => {
+const SignUp = () => {
   const [signInWithGoogle, googleUser, googleSignInLoading, googleSignInError] = useSignInWithGoogle(auth);
-  const [signInWithEmailAndPassword, emailUser, emailSignInLoading, emailSignInError] = useSignInWithEmailAndPassword(auth);
+  const [
+    createUserWithEmailAndPassword,
+    emailUser,
+    emailCreateLoading,
+    emailCreateError,
+  ] = useCreateUserWithEmailAndPassword(auth);
+  const [updateProfile, updating, updateError] = useUpdateProfile(auth);
+
+  const navigate = useNavigate();
+
   let signInError;
+
   const {
     register,
     formState: { errors },
     handleSubmit,
   } = useForm();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || "/";
 
-  useEffect(() => {
-    if(googleUser || emailUser) {
-      console.log(googleUser?googleUser:emailUser);
-      navigate(from, {replace: true});
-    }
-  }, [googleUser, emailUser, from, navigate]);
-
-  const onSubmit = (data) => {
-    signInWithEmailAndPassword(data.email, data.password);
+  const onSubmit = async (data) => {
+    await createUserWithEmailAndPassword(data.email, data.password);
+    await updateProfile({displayName: data.name})
+    console.log("Updated Profile done");
+    navigate('/appointment');
   };
 
-  if(emailSignInLoading || googleSignInLoading) {
+  if(emailCreateLoading || updating || googleSignInLoading) {
     return <Loading></Loading>
   }
 
-  if(googleSignInError || emailSignInError) {
-    signInError = <p className="text-red text-center font-bold">{googleSignInError?googleSignInError.message:emailSignInError.message}</p>
+  if(googleSignInError || emailCreateError || updateError) {
+    signInError = <p className="text-red text-center font-bold">{googleSignInError.message || emailCreateError.message || updateError.message}</p>
   }
 
+  if(googleUser || emailUser) {
+    console.log(googleUser?googleUser:emailUser);
+  }
   return (
     <div className="h-[90vh] flex justify-center items-center">
       <div className="card w-96 bg-base-100 shadow-xl">
         <div className="card-body">
-          <h1 className="text-2xl font-bold text-center">Login</h1>
+          <h1 className="text-2xl font-bold text-center">Sign Up</h1>
 
           <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="form-control w-full">
+              <label className="label">
+                <span className="label-text">What is your name</span>
+              </label>
+              <input
+                {...register("name", {
+                  required: {
+                    value: true,
+                    message: "Name is required",
+                  }
+                })}
+                type="text"
+                placeholder="Your Name"
+                className="input input-bordered w-full max-w-sm"
+              />
+              <label className="label">
+                {errors.name?.type === "required" && (
+                  <span className="label-text-alt">{errors.name.message}</span>
+                )}
+              </label>
+            </div>
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">Email Address</span>
@@ -104,7 +131,7 @@ const Login = () => {
             {
               signInError
             }
-            <input type="submit" className="btn w-full" value="Login" />
+            <input type="submit" className="btn w-full" value="Sign Up" />
           </form>
           <p className="text-center">New to doctors portal? <Link className="text-primary" to='/signup'>Create New Account</Link> </p>
           <div className="divider">OR</div>
@@ -114,7 +141,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default SignUp
