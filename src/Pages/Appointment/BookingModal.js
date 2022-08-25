@@ -2,14 +2,44 @@ import { format } from "date-fns";
 import React from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import auth from "../../Firebase/firebase.init";
+import { toast } from 'react-toastify';
 
-const BookingModal = ({ treatment, setTreatment, date }) => {
+const BookingModal = ({ treatment, setTreatment, date, refetch }) => {
+  const { name, _id} = treatment;
   const [user] = useAuthState(auth);
+  const formattedDate = format(date, 'PP');
+
   const handleBooking = event => {
     event.preventDefault();
     const slot = event.target.slot.value;
-    console.log(treatment.name, slot, treatment._id);
-    setTreatment(null);
+    const phone = event.target.phone.value;
+    const booking = {
+      treatmentId: _id,
+      treatment: name,
+      date: formattedDate,
+      slot,
+      patient: user.email,
+      patientName: user.displayName,
+      phone
+    }
+    fetch('http://localhost:5000/booking', {
+      method: 'POST',
+      headers: {
+        'content-type' : 'application/json'
+      },
+      body: JSON.stringify(booking)
+    }).then( res => res.json()).then(data => {
+      console.log(data);
+      if(data.success) {
+        toast(`An Appointment is set successfully on ${formattedDate}`);
+      } else {
+        toast.error(`Already Have an Appointment on data ${data.booking?.date}`);
+      }
+      refetch();
+      setTreatment(null);
+    });
+
+
   }
   return (
     <div>
@@ -24,7 +54,7 @@ const BookingModal = ({ treatment, setTreatment, date }) => {
             ✕
           </label>
           <h3 className="font-bold text-lg uppercase">
-            Booking for: {treatment.name}
+            Booking for: {name}
           </h3>
           <form
             className="grid grid-col-1 justify-items-center gap-4 mt-4"
@@ -44,7 +74,7 @@ const BookingModal = ({ treatment, setTreatment, date }) => {
             </select>
             <input
               name="name"
-              value={user?.displayName}
+              value={user?user.displayName:''}
               readOnly
               type="text"
               placeholder="Your Name?"
@@ -52,10 +82,16 @@ const BookingModal = ({ treatment, setTreatment, date }) => {
             />
             <input
               name="email"
-              value={user?.email}
+              value={user?user.email: ''}
               readOnly
               type="email"
               placeholder="Your Email?"
+              className="input w-full max-w-xs"
+            />
+            <input
+              name="phone"
+              type="text"
+              placeholder="Your Phone Number"
               className="input w-full max-w-xs"
             />
             <input
